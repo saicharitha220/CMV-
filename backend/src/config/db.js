@@ -15,8 +15,9 @@ const RETRY_DELAY_MS = 500;
 const MEMORY_DOWNLOAD_DIR = process.env.MONGO_MEMORY_DOWNLOAD_DIR || '/tmp/mongodb-memory-server';
 const rawMongoUri = typeof process.env.MONGO_URI === 'string' ? process.env.MONGO_URI.trim() : '';
 const hasMongoUri = rawMongoUri.length > 0;
-const USE_MEMORY_FALLBACK = !isProduction
-  || Boolean(process.env.MONGO_MEMORY_FALLBACK);
+const USE_MEMORY_FALLBACK = !hasMongoUri
+  || Boolean(process.env.MONGO_MEMORY_FALLBACK)
+  || !isProduction;
 
 let inMemoryMongoServer = null;
 
