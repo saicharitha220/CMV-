@@ -8,9 +8,11 @@ const DOCKER_MONGO_URI = 'mongodb://mongo:27017/cms_assignment';
 const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 500;
 const MEMORY_DOWNLOAD_DIR = process.env.MONGO_MEMORY_DOWNLOAD_DIR || '/tmp/mongodb-memory-server';
+const rawMongoUri = typeof process.env.MONGO_URI === 'string' ? process.env.MONGO_URI.trim() : '';
+const hasMongoUri = rawMongoUri.length > 0;
 const USE_MEMORY_FALLBACK = process.env.NODE_ENV !== 'production'
   || Boolean(process.env.MONGO_MEMORY_FALLBACK)
-  || !process.env.MONGO_URI;
+  || !hasMongoUri;
 
 let inMemoryMongoServer = null;
 
@@ -90,7 +92,7 @@ const startInMemoryMongo = async () => {
 
 const connectDB = async () => {
   console.log('connectDB: starting connection sequence');
-  const uris = [process.env.MONGO_URI, DEFAULT_MONGO_URI, DOCKER_MONGO_URI].filter(Boolean);
+  const uris = [rawMongoUri, DEFAULT_MONGO_URI, DOCKER_MONGO_URI].filter(Boolean);
 
   console.log('connectDB: candidate URIs ->', uris);
 

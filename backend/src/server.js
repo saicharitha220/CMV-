@@ -77,6 +77,8 @@ const startServer = async () => {
   let server;
   let selectedPort;
 
+  await initDb();
+
   for (let attempt = 0; attempt < 10; attempt += 1) {
     selectedPort = basePort + attempt;
     try {
@@ -98,28 +100,11 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // Try to initialize DB, but if it fails to connect within a short time,
-  // force start an in-memory MongoDB so the app reports healthy and can be used locally.
-  (async () => {
-    const initPromise = initDb();
-    // wait up to 2s for DB to connect; otherwise start in-memory fallback
-    const timeout = new Promise((resolve) => setTimeout(resolve, 2000, 'timeout'));
-    const result = await Promise.race([initPromise, timeout]);
-    if (result === 'timeout') {
-      console.warn('DB init timed out — attempting to start in-memory MongoDB fallback.');
-      // dynamic import to avoid circular dependencies issues
-      const { startInMemoryMongo } = await import('./config/db.js');
-      const mem = await startInMemoryMongo();
-      if (mem) {
-        dbConnected = true;
-        await seedAdmin();
-        console.log('In-memory Mongo started and admin seeded.');
-      }
-    } else {
-      // initDb completed — set dbConnected accordingly (initDb sets it already)
-      if (dbConnected) console.log('DB connected during init.');
-    }
-  })();
+  if (dbConnected) {
+    console.log('Database initialized successfully. Backend is ready.');
+  } else {
+    console.warn('Backend started without a connected database. Health checks will report disconnected.');
+  }
 };
 
 startServer();

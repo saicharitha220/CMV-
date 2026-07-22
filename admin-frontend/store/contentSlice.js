@@ -1,9 +1,8 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 const normalizeApiBaseUrl = (url) => {
-  if (!url) return url;
-  const trimmed = url.trim();
-  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+  if (!url || typeof url !== 'string') return '';
+  return url.trim().replace(/\s+/g, '').replace(/\/+$|\s+$/g, '');
 };
 
 const resolveApiBaseUrl = () => {
@@ -11,11 +10,11 @@ const resolveApiBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
+      return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000') || 'http://localhost:4000';
     }
   }
 
-  return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || defaultUrl);
+  return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || defaultUrl) || defaultUrl;
 };
 
 const apiUrl = resolveApiBaseUrl();
