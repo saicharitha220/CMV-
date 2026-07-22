@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import contentRoutes from './routes/contentRoutes.js';
@@ -16,6 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 let dbConnected = false;
+let dbReadyPromise = null;
 
 const seedAdmin = async () => {
   try {
@@ -37,16 +39,32 @@ const seedAdmin = async () => {
   }
 };
 
-const initDb = async () => {
-  try {
-    dbConnected = await connectDB();
-    if (dbConnected) {
-      await seedAdmin();
-    }
-  } catch (error) {
-    console.error('Database initialization error:', error);
+const ensureDbInitialized = async () => {
+  if (!dbReadyPromise) {
+    dbReadyPromise = (async () => {
+      let connected = false;
+      try {
+        connected = await connectDB();
+        if (connected) {
+          await seedAdmin();
+        }
+      } catch (error) {
+        console.error('Database initialization error:', error);
+      }
+      dbConnected = connected;
+      return connected;
+    })();
   }
+  return dbReadyPromise;
 };
+
+app.use('/api/v1', async (req, res, next) => {
+  await ensureDbInitialized();
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Database connection unavailable' });
+  }
+  next();
+});
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/content', contentRoutes);
@@ -59,7 +77,8 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/healthz', (req, res) => {
+app.get('/healthz', async (req, res) => {
+  await ensureDbInitialized();
   res.status(200).json({ status: 'ok', mongo: dbConnected ? 'connected' : 'disconnected' });
 });
 
@@ -77,7 +96,7 @@ const startServer = async () => {
   let server;
   let selectedPort;
 
-  await initDb();
+  await ensureDbInitialized();
 
   for (let attempt = 0; attempt < 10; attempt += 1) {
     selectedPort = basePort + attempt;
@@ -107,4 +126,21 @@ const startServer = async () => {
   }
 };
 
-startServer();
+const isServerless = Boolean(process.env.VERCEL || process.env.NOW_BUILDER || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+
+const vercelHandler = async (req, res) => {
+  await ensureDbInitialized();
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Database connection unavailable' });
+  }
+  return app(req, res);
+};
+
+if (isMain && !isServerless) {
+  startServer();
+}
+
+export default isServerless ? vercelHandler : app;
+export const config = { runtime: 'nodejs' };
+export { startServer, ensureDbInitialized };

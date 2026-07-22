@@ -1,18 +1,22 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-const DEFAULT_MONGO_URI = process.env.NODE_ENV === 'production'
+const isProduction = process.env.NODE_ENV === 'production'
+  || process.env.VERCEL === '1'
+  || process.env.VERCEL === 'true';
+const DEFAULT_MONGO_URI = isProduction
   ? null
   : 'mongodb://127.0.0.1:27017/cms_assignment';
-const DOCKER_MONGO_URI = 'mongodb://mongo:27017/cms_assignment';
+const DOCKER_MONGO_URI = isProduction
+  ? null
+  : 'mongodb://mongo:27017/cms_assignment';
 const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 500;
 const MEMORY_DOWNLOAD_DIR = process.env.MONGO_MEMORY_DOWNLOAD_DIR || '/tmp/mongodb-memory-server';
 const rawMongoUri = typeof process.env.MONGO_URI === 'string' ? process.env.MONGO_URI.trim() : '';
 const hasMongoUri = rawMongoUri.length > 0;
-const USE_MEMORY_FALLBACK = process.env.NODE_ENV !== 'production'
-  || Boolean(process.env.MONGO_MEMORY_FALLBACK)
-  || !hasMongoUri;
+const USE_MEMORY_FALLBACK = !isProduction
+  || Boolean(process.env.MONGO_MEMORY_FALLBACK);
 
 let inMemoryMongoServer = null;
 
