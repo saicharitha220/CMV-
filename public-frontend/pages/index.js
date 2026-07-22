@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
 
+const normalizeApiBaseUrl = (url) => {
+  if (!url) return url;
+  const trimmed = url.trim();
+  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+};
+
 const resolveApiBaseUrl = () => {
+  const defaultUrl = 'https://backend-omega-one-26.vercel.app/api/v1';
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000');
     }
   }
 
-  return process.env.NEXT_PUBLIC_API_URL || 'https://backend-omega-one-26.vercel.app/api/v1';
+  return normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || defaultUrl);
 };
 
 const HomePage = () => {
