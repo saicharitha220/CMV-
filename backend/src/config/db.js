@@ -13,7 +13,13 @@ const DOCKER_MONGO_URI = isProduction
 const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 500;
 const MEMORY_DOWNLOAD_DIR = process.env.MONGO_MEMORY_DOWNLOAD_DIR || '/tmp/mongodb-memory-server';
-const rawMongoUri = typeof process.env.MONGO_URI === 'string' ? process.env.MONGO_URI.trim() : '';
+const rawMongoUri = (() => {
+  const uri = process.env.MONGO_URI
+    || process.env.MONGODB_URI
+    || process.env.MONGO_URL
+    || process.env.MONGODB_URL;
+  return typeof uri === 'string' ? uri.trim() : '';
+})();
 const hasMongoUri = rawMongoUri.length > 0;
 const USE_MEMORY_FALLBACK = !hasMongoUri
   || Boolean(process.env.MONGO_MEMORY_FALLBACK)

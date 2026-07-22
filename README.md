@@ -48,7 +48,7 @@ ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=Password123!
 ```
 
-> Note: In production, the backend can fall back to an in-memory MongoDB when `MONGO_URI` is not configured, but this does not persist data across deployments. For a production-ready deployment, set `MONGO_URI` to a persistent MongoDB instance.
+> Note: In production, the backend can fall back to an in-memory MongoDB when no Mongo URI is configured, but this does not persist data across deployments. For a production-ready deployment, set `MONGO_URI` (or `MONGODB_URI`) to a persistent MongoDB instance.
 
 ### Admin frontend
 
