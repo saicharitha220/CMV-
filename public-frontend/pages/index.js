@@ -1,5 +1,16 @@
 import { useEffect, useState } from 'react';
 
+const resolveApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    }
+  }
+
+  return process.env.NEXT_PUBLIC_API_URL || 'https://backend-omega-one-26.vercel.app/api/v1';
+};
+
 const HomePage = () => {
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,7 +19,8 @@ const HomePage = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/content`);
+        const apiBaseUrl = resolveApiBaseUrl();
+        const resp = await fetch(`${apiBaseUrl}/content`);
         if (!resp.ok) {
           throw new Error('Failed to load content');
         }

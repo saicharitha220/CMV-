@@ -1,5 +1,16 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
+const resolveApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    }
+  }
+
+  return process.env.NEXT_PUBLIC_API_URL || 'https://backend-omega-one-26.vercel.app/api/v1';
+};
+
 const initialState = {
   // Do not read localStorage during module initialization to avoid SSR/client hydration mismatch.
   token: null,
@@ -8,8 +19,10 @@ const initialState = {
   error: null,
 };
 
+const apiUrl = resolveApiBaseUrl();
+
 export const login = createAsyncThunk('auth/login', async ({ email, password }, thunkAPI) => {
-  const resp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+  const resp = await fetch(`${apiUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),

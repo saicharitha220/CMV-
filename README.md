@@ -1,116 +1,210 @@
-# CMS Assignment — README
+# CMS Assignment — Setup Guide
 
-This repository contains a small CMS project with:
-- `backend/` — Express + Mongoose backend API
-- `admin-frontend/` — Next.js admin panel (Redux Toolkit)
+This repository contains a small CMS application with three main parts:
+
+- `backend/` — Express.js + Mongoose API
+- `admin-frontend/` — Next.js admin panel
 - `public-frontend/` — Next.js public site
 
-This README explains how to run the project locally, the main architecture decisions, and assumptions.
+The project is designed to run locally with a MongoDB instance. If no MongoDB server is available during local development, the backend can fall back to an in-memory MongoDB instance so the app can still start.
 
-## Quick start (development)
+## Prerequisites
 
-1. Backend
+Before starting, make sure you have:
+
+- Node.js 18+
+- npm
+- A MongoDB instance, or use the local fallback behavior
+- Optional: Docker Desktop for `docker-compose.yml`
+
+## 1) Install dependencies
+
+From the project root:
+
+```powershell
+npm install
+```
+
+This installs the workspace dependencies for the backend, admin frontend, and public frontend.
+
+## 2) Configure environment files
+
+### Backend
+
+Create a `.env` file inside `backend/`:
 
 ```powershell
 cd backend
 copy .env.example .env
-npm install
-npm run dev
 ```
 
-The backend will try to connect to MongoDB defined in `MONGO_URI`. If a Mongo server is not available it will automatically start an in-memory MongoDB for local development. The server seeds an admin user on first successful DB connection using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from the `.env` file.
+Example backend variables:
 
-Default backend port: 4000 (configurable via `PORT` in `.env`).
+```env
+PORT=4000
+MONGO_URI=mongodb://127.0.0.1:27017/cms_assignment
+JWT_SECRET=change_this_secret
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=Password123!
+```
 
-2. Admin frontend
+> Note: In production, the backend can fall back to an in-memory MongoDB when `MONGO_URI` is not configured, but this does not persist data across deployments. For a production-ready deployment, set `MONGO_URI` to a persistent MongoDB instance.
+
+### Admin frontend
+
+Create a local env file inside `admin-frontend/`:
 
 ```powershell
 cd admin-frontend
 copy .env.local.example .env.local
-npm install
-npm run dev
 ```
 
-Default admin frontend port: 3001. Make sure `NEXT_PUBLIC_API_URL` points to the running backend (e.g. `http://localhost:4000`).
+Example:
 
-3. Public frontend
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
+
+### Public frontend
+
+Create a local env file inside `public-frontend/`:
 
 ```powershell
 cd public-frontend
 copy .env.local.example .env.local
-npm install
-npm run dev
 ```
 
-Default public frontend port: 3000. It fetches content from the backend's `/content` endpoint.
+Example:
 
-## Environment variables
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000
+```
 
-Backend `.env.example` contains:
+## 3) Start the application
 
-- PORT=4000
-- MONGO_URI=mongodb://127.0.0.1:27017/cms_assignment
-- JWT_SECRET=change_this_secret
-- ADMIN_EMAIL=admin@example.com
-- ADMIN_PASSWORD=Password123!
+### Option A — Run everything together from the repo root
 
-Frontends `.env.local.example` contains:
+```powershell
+npm start
+```
 
-- NEXT_PUBLIC_API_URL=http://localhost:4000
+This starts:
 
-Adjust `NEXT_PUBLIC_API_URL` to the backend address and port you use.
+- Backend on `http://localhost:4000`
+- Admin frontend on `http://localhost:3001`
+- Public frontend on `http://localhost:3000`
 
-## Architecture and decisions
+### Option B — Run each service separately
 
-- Backend: Express.js + Mongoose. A flexible `Content` model stores `key`, `name`, `description`, and `value` (arbitrary JSON). This lets the admin panel store structured content (lists, nested objects, tables represented as JSON) without schema migrations.
-- Authentication: JWT-based login (`/api/v1/auth/login`) used by admin frontend. Token stored in `localStorage` by the admin UI and sent as `Authorization: Bearer <token>` for protected admin APIs.
-- Admin UI: Next.js + Redux Toolkit. The admin UI provides login, content list, create/edit (JSON editor), and delete functionality.
-- Public site: Next.js that fetches `/content` (public endpoint) and renders content JSON.
-- Local dev: The backend has a robust DB connection flow and will start an in-memory MongoDB when external Mongo is unreachable. This ensures the project runs without extra setup.
+```powershell
+npm run start:backend
+npm run start:admin
+npm run start:public
+```
 
-## Assumptions
+## 4) Login to the admin panel
 
-- The admin UI and public site are simple examples — content rendering is JSON-based. For production you would add content types, richer editors (Markdown/WYSIWYG), and field-level validation.
-- Storing `JWT` in localStorage is acceptable for this assignment demo; for production use HttpOnly cookies for improved security.
+Open the admin frontend in your browser:
 
-## How to seed / reset admin
+```text
+http://localhost:3001
+```
 
-- On first DB connection the backend will seed an admin user using `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env`.
-- To change admin credentials after seeding, either update the record directly in the DB or delete the admin document so the seed runs again.
+Use the seeded admin credentials:
 
-### Seeding example content
+- Email: `admin@example.com`
+- Password: `Password123!`
 
-Run the following from the `backend/` folder to create a few example content items used by the admin and public frontends:
+After login, the admin dashboard lets you:
+
+- view content items
+- create new content
+- edit existing content
+- delete content
+
+## 5) View the public site
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+The public site reads content from the backend public API and renders it to the page.
+
+## 6) Backend health check
+
+You can verify the backend is running with:
+
+```text
+http://localhost:4000/healthz
+```
+
+Expected response:
+
+```json
+{ "status": "ok", "mongo": "connected" }
+```
+
+If the backend is running without a reachable MongoDB server, it will attempt the local fallback and still boot for development use.
+
+## 7) Seed sample content (optional)
+
+If you want demo data to exist in the backend, run:
 
 ```powershell
 cd backend
 npm run seed
 ```
 
-This script upserts sample items with keys `SUPER`, `CHARIITHA`, and `CONTENT_1`.
+This script creates or updates sample content entries used by the admin and public frontends.
 
-## Running with Docker (optional)
+## Technology choices
 
-The repository includes a `docker-compose.yml` at the root. If Docker Desktop is available on your machine you can start services with:
+- Frontend: Next.js
+- State management: Redux Toolkit in the admin app
+- Backend: Express.js
+- Database: MongoDB via Mongoose
+- Authentication: JWT-based login for the admin area
+- Content model: flexible JSON-based content storage
+
+## Architecture overview
+
+The application follows a simple three-layer structure:
+
+1. `admin-frontend/` handles authentication and content management
+2. `backend/` provides REST APIs and database access
+3. `public-frontend/` reads the published content and renders it publicly
+
+The admin interface communicates with the backend using `/api/v1/...` endpoints. The public frontend consumes the public content endpoint and displays content without requiring admin authentication.
+
+## Assumptions
+
+- The admin and public interfaces are demonstration-level apps.
+- Content is stored as structured JSON rather than a rigid relational schema.
+- `JWT` is stored in the browser for assignment simplicity.
+- For production, a more secure token strategy and richer content authoring experience would be recommended.
+
+## Docker (optional)
+
+A root-level `docker-compose.yml` is included. If Docker is available on your machine, you can run:
 
 ```powershell
 docker compose up --build
 ```
 
-If Docker fails on Windows due to engine/pipe issues, run the local development instructions above (the backend will fall back to in-memory MongoDB).
+If Docker is not working on your machine, use the local Node.js instructions above.
 
-## What I implemented to satisfy the assignment
+## Summary
 
-- Admin authentication (login/logout)
-- Admin dashboard with content CRUD
-- Public website consuming backend content APIs
-- Flexible content model supporting arbitrary structured JSON
-- README with setup and architecture notes (this file)
+To evaluate the app locally:
 
-If you'd like, I can:
-- Add a small CSS polish to improve responsive behavior
-- Add a sample seed script to create a few example content items
-- Dockerize frontends in `docker-compose.yml` (currently you can run them locally)
+1. Copy the `.env` files from the examples
+2. Run `npm install`
+3. Start everything with `npm start`
+4. Open `http://localhost:3001`
+5. Log in with:
+   - `admin@example.com`
+   - `Password123!`
 
----
-Enjoy — let me know if you want a browser opened to the admin or public site.
+The public site is available at `http://localhost:3000`.

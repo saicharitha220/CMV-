@@ -22,6 +22,9 @@ public-frontend/.env.local
 # VS Code
 .vscode/
 
+# Vercel output
+.vercel/
+
 # OS files
 *.log
 

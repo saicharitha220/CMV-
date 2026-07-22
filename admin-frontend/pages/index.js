@@ -53,90 +53,94 @@ const AdminPage = () => {
 
   if (!auth.token) {
     return (
-      <main style={{ padding: 24 }}>
-        <h1>Admin Login</h1>
-        <form onSubmit={handleLogin} style={{ display: 'grid', gap: 12, width: 320 }}>
-          <label>
-            Email
-            <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
-          </label>
-          <label>
-            Password
-            <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
-          </label>
-          <button type="submit">Login</button>
-          {auth.error && <p style={{ color: 'red' }}>{auth.error}</p>}
-        </form>
+      <main className="admin-shell">
+        <section className="admin-card" style={{ maxWidth: 420, margin: '40px auto 0' }}>
+          <h1>Admin Login</h1>
+          <form onSubmit={handleLogin} className="admin-form-grid">
+            <label>
+              Email
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+            </label>
+            <label>
+              Password
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+            </label>
+            <button type="submit">Login</button>
+            {auth.error && <p style={{ color: 'red' }}>{auth.error}</p>}
+          </form>
+        </section>
       </main>
     );
   }
 
   return (
-    <main style={{ padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Content Management</h1>
-        <button onClick={() => dispatch(logout())}>Logout</button>
+    <main className="admin-shell">
+      <div className="admin-toolbar">
+        <h1 style={{ margin: 0 }}>Content Management</h1>
+        <button className="secondary" onClick={() => dispatch(logout())}>Logout</button>
       </div>
 
-      <section style={{ marginTop: 24 }}>
-        <h2>Content Items</h2>
-        {contentState.status === 'loading' && <p>Loading...</p>}
-        {contentState.error && <p style={{ color: 'red' }}>{contentState.error}</p>}
-        <ul>
-          {contentState.items.map((item) => (
-            <li key={item.key} style={{ marginBottom: 16, border: '1px solid #ddd', padding: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <strong>{item.name}</strong>
-                <button onClick={() => setEditingKey(item.key)}>Edit JSON</button>
-              </div>
-              <p>{item.description}</p>
-              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{JSON.stringify(item.value, null, 2)}</pre>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="admin-grid">
+        <section className="admin-card">
+          <h2>Content Items</h2>
+          {contentState.status === 'loading' && <p>Loading...</p>}
+          {contentState.error && <p style={{ color: 'red' }}>{contentState.error}</p>}
+          <ul className="admin-list">
+            {contentState.items.map((item) => (
+              <li key={item.key} className="admin-item">
+                <div className="admin-item-header">
+                  <strong>{item.name}</strong>
+                  <button onClick={() => setEditingKey(item.key)}>Edit JSON</button>
+                </div>
+                <p>{item.description}</p>
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{JSON.stringify(item.value, null, 2)}</pre>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-      <section style={{ marginTop: 24, maxWidth: 800 }}>
-        <h2>Add New Content Item</h2>
-        <div style={{ display: 'grid', gap: 12 }}>
-          <label>
-            Key
-            <input value={newItem.key} onChange={(e) => setNewItem({ ...newItem, key: e.target.value })} />
-          </label>
-          <label>
-            Name
-            <input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
-          </label>
-          <label>
-            Description
-            <input value={newItem.description} onChange={(e) => setNewItem({ ...newItem, description: e.target.value })} />
-          </label>
-          <label>
-            Value (JSON)
-            <textarea
-              rows="8"
-              value={newItem.value}
-              onChange={(e) => setNewItem({ ...newItem, value: e.target.value })}
-              style={{ fontFamily: 'monospace' }}
-            />
-          </label>
-          <button onClick={handleCreate}>Create Content Item</button>
-        </div>
-      </section>
+        <section className="admin-form-card">
+          <h2>Add New Content Item</h2>
+          <div className="admin-form-grid">
+            <label>
+              Key
+              <input value={newItem.key} onChange={(e) => setNewItem({ ...newItem, key: e.target.value })} />
+            </label>
+            <label>
+              Name
+              <input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
+            </label>
+            <label>
+              Description
+              <input value={newItem.description} onChange={(e) => setNewItem({ ...newItem, description: e.target.value })} />
+            </label>
+            <label>
+              Value (JSON)
+              <textarea
+                rows="8"
+                value={newItem.value}
+                onChange={(e) => setNewItem({ ...newItem, value: e.target.value })}
+                style={{ fontFamily: 'monospace' }}
+              />
+            </label>
+            <button onClick={handleCreate}>Create Content Item</button>
+          </div>
+        </section>
+      </div>
 
       {editingKey && (
-        <section style={{ marginTop: 24 }}>
+        <section className="admin-editor-card" style={{ marginTop: 20 }}>
           <h2>Edit Content: {editingKey}</h2>
           <textarea
-            rows="12"
+            className="admin-editor"
             value={editorValue}
             onChange={(e) => setEditorValue(e.target.value)}
             style={{ width: '100%', fontFamily: 'monospace' }}
           />
-          <button onClick={handleSave}>Save</button>
-          <button onClick={() => setEditingKey(null)} style={{ marginLeft: 12 }}>
-            Cancel
-          </button>
+          <div className="admin-inline-actions" style={{ marginTop: 12 }}>
+            <button onClick={handleSave}>Save</button>
+            <button className="secondary" onClick={() => setEditingKey(null)}>Cancel</button>
+          </div>
         </section>
       )}
     </main>

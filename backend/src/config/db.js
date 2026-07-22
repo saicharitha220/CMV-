@@ -1,10 +1,16 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
-const DEFAULT_MONGO_URI = 'mongodb://127.0.0.1:27017/cms_assignment';
+const DEFAULT_MONGO_URI = process.env.NODE_ENV === 'production'
+  ? null
+  : 'mongodb://127.0.0.1:27017/cms_assignment';
 const DOCKER_MONGO_URI = 'mongodb://mongo:27017/cms_assignment';
 const MAX_RETRIES = 1;
 const RETRY_DELAY_MS = 500;
+const MEMORY_DOWNLOAD_DIR = process.env.MONGO_MEMORY_DOWNLOAD_DIR || '/tmp/mongodb-memory-server';
+const USE_MEMORY_FALLBACK = process.env.NODE_ENV !== 'production'
+  || Boolean(process.env.MONGO_MEMORY_FALLBACK)
+  || !process.env.MONGO_URI;
 
 let inMemoryMongoServer = null;
 
@@ -61,7 +67,11 @@ const connectToUri = async (uri) => {
 const startInMemoryMongo = async () => {
   try {
     console.warn('Attempting to start in-memory MongoDB for development...');
-    inMemoryMongoServer = await MongoMemoryServer.create();
+    inMemoryMongoServer = await MongoMemoryServer.create({
+      binary: {
+        downloadDir: MEMORY_DOWNLOAD_DIR,
+      },
+    });
     const uri = inMemoryMongoServer.getUri();
     const connected = await connectToUri(uri);
     if (connected) {
@@ -91,7 +101,12 @@ const connectDB = async () => {
     }
   }
 
-  console.error('MongoDB connection failed for all configured URIs. Falling back to in-memory MongoDB.');
+  if (!USE_MEMORY_FALLBACK) {
+    console.error('MongoDB connection failed for all configured URIs, and memory fallback is disabled in production.');
+    return false;
+  }
+
+  console.warn('MongoDB connection failed for all configured URIs. Falling back to in-memory MongoDB.');
   const mem = await startInMemoryMongo();
   if (mem) return true;
 

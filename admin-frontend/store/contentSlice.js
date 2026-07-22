@@ -1,6 +1,17 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+const resolveApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    }
+  }
+
+  return process.env.NEXT_PUBLIC_API_URL || 'https://backend-omega-one-26.vercel.app/api/v1';
+};
+
+const apiUrl = resolveApiBaseUrl();
 
 export const fetchContent = createAsyncThunk('content/fetchContent', async (_, thunkAPI) => {
   const token = thunkAPI.getState().auth.token;
