@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Next.js build output
+.next/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+backend/.env
+admin-frontend/.env.local
+public-frontend/.env.local
+
+# VS Code
+.vscode/
+
+# OS files
+*.log
+
+# Temporary files
+*.tmp
+*.temp

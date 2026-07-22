@@ -1,0 +1,18 @@
+{
+  "name": "cms-assignment",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "admin-frontend",
+    "public-frontend"
+  ],
+  "scripts": {
+    "start:backend": "npm --prefix backend run dev",
+    "start:admin": "npm --prefix admin-frontend run dev",
+    "start:public": "npm --prefix public-frontend run dev",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:admin\" \"npm run start:public\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,9 @@
+html, body, #__next {
+  min-height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #f8fafc;
+  color: #111827;
+}
